@@ -19,7 +19,7 @@ comp3710-project/
 ├── unet/                     # Task 2
 ├── gan/                      # Task 3
 ├── utils/                    # shared helpers (plotting, checkpointing)
-├── jobs/                     # SLURM job scripts for running on Rangpur
+├── jobs/                     # SLURM job scripts (for Rangpur — required for the live demo)
 └── requirements.txt
 ```
 
@@ -48,7 +48,32 @@ directly from the cluster path.
 
 ## Setup
 
-**On Rangpur** (confirmed working setup for this project):
+**Note on where these results were produced:** training for all three tasks in this
+report was run on **Google Colab** (CUDA GPU), not Rangpur — the Rangpur job queue
+did not clear during development. Rangpur setup instructions are included below since
+the assignment requires demonstrating inference (and optionally training) there, but
+the training times and results reported in this README reflect the Colab runs.
+
+**On Google Colab** (what was actually used for these results):
+
+```python
+# In a Colab notebook, with Runtime > Change runtime type > GPU selected:
+!git clone https://github.com/<username>/COMP3710-demo2.git
+%cd COMP3710-demo2
+!pip install umap-learn -q   # everything else ships with Colab's default torch install
+
+# Upload keras_png_slices_data.zip via the file picker, then:
+!unzip -q keras_png_slices_data.zip -d .
+# Update ROOT_DIR in data/data_loader.py to point at the unzipped folder, then:
+!python3 vae/train.py
+!python3 unet/train.py
+!python3 gan/train.py
+```
+
+Colab's GPU allocation (T4 or better, depending on availability) is not fixed or
+guaranteed — see the training times below for the actual hardware this project ran on.
+
+**On Rangpur** (required for the live demo; also fully supported for training):
 
 ```bash
 ssh <username>@rangpur.compute.eait.uq.edu.au
@@ -86,9 +111,10 @@ downsampling) feeding two linear heads (`fc_mu`, `fc_logvar`), a reparameterisat
 ending in `tanh` to match the `[-1, 1]` normalised input images. Latent dimension: 32.
 
 **Training**: 30 epochs, combined reconstruction (MSE) + KL-divergence (ELBO) loss,
-Adam optimiser (lr 1e-3). Training took **463.5 seconds** (~7.7 minutes) on an A100.
-The KL term stabilised around ~42 rather than collapsing to 0, indicating the latent
-code was being used meaningfully rather than ignored (no posterior collapse).
+Adam optimiser (lr 1e-3). Training took **463.5 seconds** (~7.7 minutes) on a Google
+Colab GPU (CUDA). The KL term stabilised around ~42 rather than collapsing to 0,
+indicating the latent code was being used meaningfully rather than ignored (no
+posterior collapse).
 
 **Results**:
 - Reconstructions closely resemble real brain MRI slices, including ventricle structure
@@ -114,10 +140,10 @@ Output: 4 channels (one per class), i.e. **categorical/one-hot-style output** �
 
 **Training**: 40 epochs, combined loss (50% `CrossEntropyLoss` + 50% differentiable
 Dice loss), Adam optimiser (lr 1e-3) with `ReduceLROnPlateau` scheduling. Training took
-**5324.0 seconds** (~88.7 minutes) on an A100. Validation loss/DSC plateaued around
-epoch 17–22 before mild overfitting set in (train loss kept falling while val loss
-crept back up slightly) — the LR scheduler stabilised performance rather than letting
-it degrade further.
+**5324.0 seconds** (~88.7 minutes) on a Google Colab GPU (CUDA). Validation loss/DSC
+plateaued around epoch 17–22 before mild overfitting set in (train loss kept falling
+while val loss crept back up slightly) — the LR scheduler stabilised performance
+rather than letting it degrade further.
 
 **Results — final per-class DSC (validation set)**:
 
@@ -149,7 +175,7 @@ assignment's own warning about GAN convergence difficulty.
 and a mode-collapse warning that monitors for Discriminator loss collapsing near 0.
 
 **Training**: 100 epochs, `BCEWithLogitsLoss`, separate Adam optimisers for G and D
-(lr 2e-4). Training took **1361.9 seconds** (~22.7 minutes) on an A100.
+(lr 2e-4). Training took **1361.9 seconds** (~22.7 minutes) on a Google Colab GPU (CUDA).
 
 **Loss trajectory**: G loss fell quickly in the first ~20 epochs (9.7 → 2.5), both
 losses stayed roughly balanced through epoch ~65, then G loss climbed gradually
