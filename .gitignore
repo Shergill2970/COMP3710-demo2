@@ -13,6 +13,8 @@ checkpoints/
 runs/
 
 # Data - never commit the actual dataset
+keras_png_slices_data/
+keras_png_slices_data.zip
 data/OASIS/
 *.nii
 *.nii.gz
