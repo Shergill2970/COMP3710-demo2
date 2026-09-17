@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Model checkpoints - don't commit these, they're large binary files
+*.pth
+*.pt
+*.ckpt
+checkpoints/
+runs/
+
+# Data - never commit the actual dataset
+data/OASIS/
+*.nii
+*.nii.gz
+
+# SLURM logs
+*.out
+*.err
+slurm-*.out
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
